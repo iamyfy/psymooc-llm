@@ -1,0 +1,18 @@
+# Web框架
+flask==3.0.0
+flask-cors==4.0.0
+flask-restful==0.3.10
+
+# 原有依赖
+langchain==0.2.16
+langchain-openai==0.1.25
+langchain-community==0.2.16
+langchain-core==0.2.40
+pydantic==2.8.2
+python-dotenv==1.0.1
+faiss-cpu==1.8.0
+langgraph>=0.2.0
+
+# 可选：保留FastAPI用于WebSocket（如果需要）
+fastapi==0.112.1
+uvicorn[standard]==0.30.6
