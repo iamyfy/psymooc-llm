@@ -221,7 +221,7 @@ def retrieve_story_node(state: CauseAgentState):
 # prompt + chain
 story_prompt = ChatPromptTemplate.from_messages([
     ("system", """你是一名专业的精神科医生助理，擅长根据患者资料撰写个性化、细致且符合临床逻辑的病情背景故事和初始陈述。
-                    你的任务是：
+"                    你的任务是：
                     1. 基于患者的基本信息和病情状况，结合既有的案例信息，推测可能的诱发因素。
                     2. 充分参考相关案例，但要进行个性化改编，使故事具有独特性。
                     3. 描述需贴近真实精神科门诊场景，细节可信，逻辑合理。
@@ -240,7 +240,7 @@ story_prompt = ChatPromptTemplate.from_messages([
                 - 严重程度：{severity}
                 
                 患者目前基本病情状况：{story_retrieved}\n
-            请基于上述信息生成一段约150-200字的个性化诱因故事，要求情境具体、细节丰富，可直接作为患者与医生对话的背景材料。""")
+            请基于上述信息生成一段约150-200字的个性化诱因故事，要求情境具体、细节丰富，可直接作为患者与医生对话的背景材料。"")
 ])
 
 story_chain = story_prompt | llm

@@ -19,6 +19,7 @@ from patient_agent.record_generator import generate_medical_record, parse_patien
 from patient_agent.policy import patient_chain
 from patient_agent.schemas import PatientProfile, PatientPersona, SessionState
 from patient_agent.state import DEFAULT_PROFILE, DEFAULT_PERSONA
+from patient_agent.evaluation import evaluate_dialog, generate_dialog_document
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -345,6 +346,66 @@ class DeleteSessionResource(Resource):
                 'error': f'删除会话失败: {str(e)}'
             }, 500
 
+class EvaluateDialogResource(Resource):
+    """评估对话并生成文档"""
+    
+    def post(self, session_id: str):
+        try:
+            if session_id not in sessions:
+                return {
+                    'success': False,
+                    'error': '会话不存在'
+                }, 404
+            
+            session = sessions[session_id]
+            
+            # 检查是否有对话记录
+            if not session.dialog_history:
+                return {
+                    'success': False,
+                    'error': '该会话没有对话记录'
+                }, 400
+            
+            logger.info(f"开始评估会话 {session_id} 的对话记录...")
+            
+            # 调用评估函数
+            evaluation_result = evaluate_dialog(
+                dialog_history=session.dialog_history,
+                patient_profile=session.patient_profile.model_dump(),
+                patient_persona=session.patient_persona.model_dump()
+            )
+            
+            # 生成文档
+            document = generate_dialog_document(
+                dialog_history=session.dialog_history,
+                patient_profile=session.patient_profile.model_dump(),
+                patient_persona=session.patient_persona.model_dump(),
+                session_id=session_id,
+                evaluation_result=evaluation_result
+            )
+            
+            logger.info(f"会话 {session_id} 的对话评估完成")
+            
+            return {
+                'success': True,
+                'session_id': session_id,
+                'evaluation': {
+                    'scoring': evaluation_result.get('scoring', {}),
+                    'feedback': evaluation_result.get('feedback', '')
+                },
+                'document': document,
+                'formatted_dialog': evaluation_result.get('formatted_dialog', ''),
+                'patient_info': evaluation_result.get('patient_info', '')
+            }
+            
+        except Exception as e:
+            logger.error(f"评估对话失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            return {
+                'success': False,
+                'error': f'评估对话失败: {str(e)}'
+            }, 500
+
 # 注册API路由
 api.add_resource(PatientCreateResource, '/api/v1/patients/create')
 api.add_resource(PatientResource, '/api/v1/patients/<string:session_id>')
@@ -353,6 +414,7 @@ api.add_resource(HistoryResource, '/api/v1/patients/<string:session_id>/history'
 api.add_resource(StageResource, '/api/v1/patients/<string:session_id>/stage')
 api.add_resource(RegenerateResource, '/api/v1/patients/<string:session_id>/regenerate')
 api.add_resource(DeleteSessionResource, '/api/v1/patients/<string:session_id>')
+api.add_resource(EvaluateDialogResource, '/api/v1/patients/<string:session_id>/evaluate')
 
 # 健康检查端点
 @app.route('/health')
@@ -377,6 +439,7 @@ def index():
             'update_stage': 'PUT /api/v1/patients/{session_id}/stage',
             'regenerate': 'POST /api/v1/patients/{session_id}/regenerate',
             'delete_session': 'DELETE /api/v1/patients/{session_id}',
+            'evaluate_dialog': 'POST /api/v1/patients/{session_id}/evaluate',
             'health': 'GET /health'
         }
     })

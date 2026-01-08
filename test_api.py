@@ -220,6 +220,104 @@ def test_regenerate():
         print(f"❌ 重新生成病历异常: {e}")
         return False
 
+def test_evaluate_dialog():
+    """测试评估对话并生成文档"""
+    if not TEST_SESSION_ID:
+        print("❌ 跳过评估对话测试 - 没有有效会话ID")
+        return False
+    
+    # 确保有对话记录
+    try:
+        history_response = requests.get(f"{BASE_URL}/api/v1/patients/{TEST_SESSION_ID}/history")
+        if history_response.status_code == 200:
+            history_data = history_response.json()
+            dialog_count = len(history_data.get('dialog_history', []))
+        else:
+            dialog_count = 0
+    except:
+        dialog_count = 0
+    
+    if dialog_count == 0:
+        print("⚠️  会话中没有对话记录，先进行几轮对话...")
+        # 进行几轮测试对话
+        test_chat_messages = [
+            "你好，请介绍一下你的情况",
+            "你什么时候开始出现这些症状的？",
+            "能详细描述一下你的感受吗？"
+        ]
+        for msg in test_chat_messages:
+            requests.post(f"{BASE_URL}/api/v1/patients/{TEST_SESSION_ID}/chat", 
+                        json={"message": msg})
+            time.sleep(1)  # 等待一下
+    
+    print(f"\n🔍 测试评估对话 (会话: {TEST_SESSION_ID})...")
+    print("   注意：此测试可能需要较长时间（10-30秒）...")
+    try:
+        start_time = time.time()
+        response = requests.post(f"{BASE_URL}/api/v1/patients/{TEST_SESSION_ID}/evaluate", timeout=60)
+        elapsed_time = time.time() - start_time
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('success'):
+                print(f"✅ 评估对话成功 (耗时: {elapsed_time:.1f}秒)")
+                
+                # 显示评分结果
+                scoring = result.get('evaluation', {}).get('scoring', {})
+                if isinstance(scoring, dict) and '总分' in scoring:
+                    print(f"   总分: {scoring['总分']}/100分")
+                    # 显示各类别小计
+                    for category in ['原则态度', '基本技巧', '效果印象']:
+                        if category in scoring and isinstance(scoring[category], dict):
+                            subtotal = scoring[category].get('小计', 'N/A')
+                            print(f"   {category}小计: {subtotal}分")
+                    # 显示主要亮点和问题
+                    if '主要亮点' in scoring and isinstance(scoring['主要亮点'], list):
+                        highlights = [h for h in scoring['主要亮点'] if h]
+                        if highlights:
+                            print(f"   主要亮点: {highlights[0]}")
+                    if '主要问题' in scoring and isinstance(scoring['主要问题'], list):
+                        issues = [i for i in scoring['主要问题'] if i]
+                        if issues:
+                            print(f"   主要问题: {issues[0]}")
+                elif isinstance(scoring, dict) and 'raw_output' in scoring:
+                    print(f"   ⚠️  评分结果解析失败，返回原始输出")
+                
+                # 显示反馈摘要
+                feedback = result.get('evaluation', {}).get('feedback', '')
+                if feedback:
+                    feedback_preview = feedback[:150] + "..." if len(feedback) > 150 else feedback
+                    print(f"   反馈预览: {feedback_preview}")
+                
+                # 检查文档
+                document = result.get('document', '')
+                if document:
+                    print(f"   文档长度: {len(document)} 字符")
+                    # 可选：保存文档到文件
+                    try:
+                        filename = f"dialog_report_{TEST_SESSION_ID}.txt"
+                        with open(filename, "w", encoding="utf-8") as f:
+                            f.write(document)
+                        print(f"   ✅ 文档已保存到: {filename}")
+                    except Exception as e:
+                        print(f"   ⚠️  保存文档失败: {e}")
+                
+                return True
+            else:
+                print(f"❌ 评估对话失败: {result.get('error')}")
+                return False
+        else:
+            print(f"❌ 评估对话失败: {response.status_code}")
+            if response.status_code == 400:
+                print(f"   可能原因: 会话中没有对话记录")
+            return False
+    except requests.exceptions.Timeout:
+        print(f"❌ 评估对话超时（超过60秒）")
+        return False
+    except Exception as e:
+        print(f"❌ 评估对话异常: {e}")
+        return False
+
 def test_delete_session():
     """测试删除会话"""
     if not TEST_SESSION_ID:
@@ -262,6 +360,7 @@ def main():
         ("获取对话历史", test_get_history),
         ("更新对话阶段", test_update_stage),
         ("重新生成病历", test_regenerate),
+        ("评估对话并生成文档", test_evaluate_dialog),
         ("删除会话", test_delete_session),
     ]
     
