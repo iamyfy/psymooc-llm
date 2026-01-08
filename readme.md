@@ -10,9 +10,8 @@ The system is intended for **psychiatric education, simulation-based training, a
 
 ---
 ## Note
-In addition to the backend system released in this repository, the project includes a Unity-based frontend used for interactive interviews. 
+In addition to the backend system released in this repository, the project includes a Unity-based frontend used for interactive interviews. This project is under active development. The current version represents a stable research prototype used in the reported experiments. Ongoing updates will be done without changing the core system design described in this submission.
 
-This project is under active development. The current version represents a stable research prototype used in the reported experiments. Ongoing updates will be done without changing the core system design described in this submission.
 ---
 
 ## Research Contribution
