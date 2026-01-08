@@ -8,11 +8,10 @@ Patient Agent is a backend system for simulating psychiatric patients supporting
 
 The system is intended for **psychiatric education, simulation-based training, and human–AI interaction research**, rather than clinical deployment.
 
----
+
 ## Note
 In addition to the backend system released in this repository, the project includes a Unity-based frontend used for interactive interviews. This project is under active development. The current version represents a stable research prototype used in the reported experiments. Ongoing updates will be done without changing the core system design described in this submission.
 
----
 
 ## Research Contribution
 
@@ -23,7 +22,6 @@ The system demonstrates:
 3. **End-to-end interview pipelines**, from dialogue to structured clinical documentation
 4. **Programmatic evaluation** of clinician–patient interactions through automated scoring and feedback agents
 
----
 
 ## System Design
 
@@ -35,7 +33,6 @@ The system demonstrates:
 * **Dialogue Policy**: Explicit dialogue state and behavioral policy control
 * **API Layer**: RESTful interface for reproducible experiments
 
----
 
 ## Core Functionalities
 
@@ -54,7 +51,6 @@ The system demonstrates:
 * **Interaction Evaluation**
   Generates multi-dimension scores and qualitative feedback for interview performance analysis.
 
----
 
 ## Reproducibility
 
@@ -77,16 +73,12 @@ python app.py
 
 The system exposes a REST API at `http://localhost:5000`.
 
----
 
 ## Ethical Use Statement
 This system **does not provide medical diagnosis or treatment**.
 All patient interactions are synthetic and intended solely for **research and educational purposes**.
 
----
-
 ## License
 
 MIT License.
 
----
